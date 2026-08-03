@@ -319,13 +319,14 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auto-play music when the scroll canvas section begins (man folder starts)
+  // Auto-play music AFTER the man folder scroll finishes (~26% of the total scroll)
   const hasAutoPlayed = useRef(false);
   useEffect(() => {
     if (frameCount === 0 || isLoading) return;
 
     const unsubAutoPlay = scrollYProgress.on("change", (v) => {
-      if (v > 0.001 && !hasAutoPlayed.current && isMuted) {
+      // 300 frames of man / ~1177 total frames = ~0.255. We trigger at > 0.26
+      if (v > 0.26 && !hasAutoPlayed.current && isMuted) {
         hasAutoPlayed.current = true;
         const audio = audioRef.current;
         if (audio) {
