@@ -142,12 +142,12 @@ export default function Home() {
         }
       }
 
-      // Throttled eviction — only every 60 renders, keep 150 frames
+      // Throttled eviction — only every 120 renders, keep 400 frames to prevent GC stutter and dropped frames
       evictCounter.current++;
-      if (evictCounter.current >= 60) {
+      if (evictCounter.current >= 120) {
         evictCounter.current = 0;
-        const KEEP = 150;
-        if (imageCache.current.size > KEEP * 2) {
+        const KEEP = 400;
+        if (imageCache.current.size > KEEP * 1.5) {
           const toDelete = [];
           for (const key of imageCache.current.keys()) {
             if (key < index - KEEP || key > index + KEEP) {
@@ -165,17 +165,14 @@ export default function Home() {
         drawToCanvas(ctx, canvas, img);
         lastRenderedFrame.current = index;
       } else {
-        // Frame not ready — find nearest loaded neighbor (search ±10)
+        // Frame not ready — find nearest loaded neighbor (search ±5 instead of 10 for performance)
         let drawn = false;
-        for (let offset = 1; offset <= 10; offset++) {
-          // Prefer frame behind (already seen) over frame ahead
+        for (let offset = 1; offset <= 5; offset++) {
           for (const n of [index - offset, index + offset]) {
             if (n < 0 || n >= frameCount) continue;
             const nImg = imageCache.current.get(n);
             if (nImg && nImg.complete && nImg.naturalWidth > 0) {
               drawToCanvas(ctx, canvas, nImg);
-              // Don't update lastRenderedFrame to exact neighbor — 
-              // this lets the target frame still get drawn when it loads
               drawn = true;
               break;
             }
@@ -184,11 +181,12 @@ export default function Home() {
         }
 
         // Schedule a redraw when the target frame loads
+        // IMPORTANT: Only draw if the user is STILL on this exact frame to prevent out-of-order stutter!
         if (img) {
           const onReady = () => {
             const p = scrollYProgress.get();
             const curr = Math.min(frameCount - 1, Math.max(0, Math.floor(p * (frameCount - 1))));
-            if (Math.abs(curr - index) <= 5 && drawToCanvas(ctx, canvas, img)) {
+            if (curr === index && drawToCanvas(ctx, canvas, img)) {
               lastRenderedFrame.current = index;
             }
           };
@@ -205,7 +203,7 @@ export default function Home() {
           newImg.onload = () => {
             const p = scrollYProgress.get();
             const curr = Math.min(frameCount - 1, Math.max(0, Math.floor(p * (frameCount - 1))));
-            if (Math.abs(curr - index) <= 5 && drawToCanvas(ctx, canvas, newImg)) {
+            if (curr === index && drawToCanvas(ctx, canvas, newImg)) {
               lastRenderedFrame.current = index;
             }
           };
