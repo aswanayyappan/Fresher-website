@@ -29,14 +29,6 @@ export default function Home() {
   });
 
   // Helper: load a single image with decode() for non-blocking decoding
-  useEffect(() => {
-    // Keep Render server awake by pinging it every 5 minutes while the page is open
-    const pingInterval = setInterval(() => {
-      fetch('/api/ping').catch(() => {});
-    }, 5 * 60 * 1000);
-    return () => clearInterval(pingInterval);
-  }, []);
-
   const loadImage = useCallback((index, src) => {
     if (imageCache.current.has(index) || loadingSet.current.has(index)) return;
     loadingSet.current.add(index);
