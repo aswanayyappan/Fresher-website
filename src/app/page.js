@@ -364,20 +364,32 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Auto-play music when the man folder images start scrolling
+  // --- AUDIO AUTOPLAY (two-phase: unlock on touch, play on scroll) ---
+  // Browsers block audio.play() unless triggered by a user gesture.
+  // Phase 1: Unlock audio on the very first touch/click anywhere on the page.
+  // Phase 2: Actually start playing when the scroll reaches the man folder images.
+  const audioUnlocked = useRef(false);
+  const wantAutoPlay = useRef(false);  // true if scroll passed the trigger but audio wasn't unlocked yet
   const hasAutoPlayed = useRef(false);
-  useEffect(() => {
-    if (frameCount === 0 || isLoading) return;
 
-    const unsubAutoPlay = scrollYProgress.on("change", (v) => {
-      // Trigger as soon as scrolling begins through the image sequence
-      if (v > 0.005 && !hasAutoPlayed.current && isMuted) {
-        hasAutoPlayed.current = true;
-        const audio = audioRef.current;
-        if (audio) {
-          audio.volume = 0;
+  // Phase 1: Unlock audio context on first user interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      if (audioUnlocked.current) return;
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      // Play silently then pause to unlock the audio element
+      audio.volume = 0;
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+        audioUnlocked.current = true;
+
+        // If scroll already passed the trigger point, play now
+        if (wantAutoPlay.current && !hasAutoPlayed.current && isMuted) {
+          hasAutoPlayed.current = true;
           audio.play().then(() => {
-            // Fade in smoothly over 1 second
             let vol = 0;
             const fadeIn = setInterval(() => {
               vol = Math.min(vol + 0.02, 0.4);
@@ -386,6 +398,47 @@ export default function Home() {
             }, 50);
             setIsMuted(false);
           }).catch(() => {});
+        }
+      }).catch(() => {});
+    };
+
+    // Listen for ANY user interaction to unlock audio
+    window.addEventListener("touchstart", unlockAudio, { once: false, passive: true });
+    window.addEventListener("click", unlockAudio, { once: false });
+    window.addEventListener("pointerdown", unlockAudio, { once: false, passive: true });
+
+    return () => {
+      window.removeEventListener("touchstart", unlockAudio);
+      window.removeEventListener("click", unlockAudio);
+      window.removeEventListener("pointerdown", unlockAudio);
+    };
+  }, [isMuted]);
+
+  // Phase 2: When scroll reaches man folder, either play or set wantAutoPlay flag
+  useEffect(() => {
+    if (frameCount === 0 || isLoading) return;
+
+    const unsubAutoPlay = scrollYProgress.on("change", (v) => {
+      if (v > 0.005 && !hasAutoPlayed.current && isMuted) {
+        if (audioUnlocked.current) {
+          // Audio is unlocked, play immediately
+          hasAutoPlayed.current = true;
+          const audio = audioRef.current;
+          if (audio) {
+            audio.volume = 0;
+            audio.play().then(() => {
+              let vol = 0;
+              const fadeIn = setInterval(() => {
+                vol = Math.min(vol + 0.02, 0.4);
+                audio.volume = vol;
+                if (vol >= 0.4) clearInterval(fadeIn);
+              }, 50);
+              setIsMuted(false);
+            }).catch(() => {});
+          }
+        } else {
+          // Audio not unlocked yet — remember that we want to play
+          wantAutoPlay.current = true;
         }
       }
     });
