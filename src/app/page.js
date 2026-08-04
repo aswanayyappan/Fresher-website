@@ -120,89 +120,18 @@ export default function Home() {
 
     // Hide Gemini watermark for images in the 'man' folder
     if (imagePath.includes("/man/")) {
-      const imgRight = dx + iw * scale;
-      const imgBottom = dy + ih * scale;
+      // Full-width solid black bar across the entire bottom — bulletproof coverage
+      const barH = Math.max(80, ch * 0.12);  // 12% of canvas height
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, ch - barH, cw, barH);
 
-      // LAYER 1: Solid opaque black to fully kill the watermark
-      const solidW = 180 * scale;
-      const solidH = 160 * scale;
-      ctx.fillStyle = "#050505";
-      ctx.fillRect(imgRight - solidW, imgBottom - solidH, solidW, solidH);
-
-      // LAYER 2: Smooth gradient fade so the edges blend beautifully into the image
-      const fadeW = 260 * scale;
-      const fadeH = 240 * scale;
-
-      // Horizontal fade (left edge of the solid box blends out)
-      const hGrad = ctx.createLinearGradient(
-        imgRight - fadeW, imgBottom,
-        imgRight - solidW + (20 * scale), imgBottom
-      );
-      hGrad.addColorStop(0, "rgba(5, 5, 5, 0)");
-      hGrad.addColorStop(1, "rgba(5, 5, 5, 1)");
-      ctx.fillStyle = hGrad;
-      ctx.fillRect(imgRight - fadeW, imgBottom - solidH, fadeW - solidW + (20 * scale), solidH);
-
-      // Vertical fade (top edge of the solid box blends out)
-      const vGrad = ctx.createLinearGradient(
-        imgRight, imgBottom - fadeH,
-        imgRight, imgBottom - solidH + (20 * scale)
-      );
-      vGrad.addColorStop(0, "rgba(5, 5, 5, 0)");
-      vGrad.addColorStop(1, "rgba(5, 5, 5, 1)");
-      ctx.fillStyle = vGrad;
-      ctx.fillRect(imgRight - solidW, imgBottom - fadeH, solidW, fadeH - solidH + (20 * scale));
-
-      // Corner diagonal fade
-      const cGrad = ctx.createRadialGradient(
-        imgRight - solidW, imgBottom - solidH, 0,
-        imgRight - solidW, imgBottom - solidH, 80 * scale
-      );
-      cGrad.addColorStop(0, "rgba(5, 5, 5, 0.9)");
-      cGrad.addColorStop(0.5, "rgba(5, 5, 5, 0.3)");
-      cGrad.addColorStop(1, "rgba(5, 5, 5, 0)");
-      ctx.fillStyle = cGrad;
-      ctx.fillRect(imgRight - solidW - (80 * scale), imgBottom - solidH - (80 * scale), 80 * scale, 80 * scale);
-
-      // --- Subtle glowing accent line ---
-      const lineY = imgBottom - (110 * scale);
-      const lineGrad = ctx.createLinearGradient(
-        imgRight - (160 * scale), lineY,
-        imgRight - (20 * scale), lineY
-      );
-      lineGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
-      lineGrad.addColorStop(0.4, "rgba(255, 255, 255, 0.12)");
-      lineGrad.addColorStop(1, "rgba(255, 255, 255, 0.25)");
-      ctx.strokeStyle = lineGrad;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(imgRight - (160 * scale), lineY);
-      ctx.lineTo(imgRight - (20 * scale), lineY);
-      ctx.stroke();
-
-      // --- Premium text ---
-      ctx.textAlign = "right";
-      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
-      ctx.shadowBlur = 8 * scale;
-
-      // Main title
-      const titleSize = Math.max(14, 16 * scale);
-      ctx.font = `600 ${titleSize}px 'Segoe UI', 'Helvetica Neue', sans-serif`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
-      ctx.fillText("FRESHER 26", imgRight - (25 * scale), imgBottom - (70 * scale));
-
-      // Subtitle
-      ctx.shadowBlur = 0;
-      ctx.shadowColor = "transparent";
-      const subSize = Math.max(9, 10 * scale);
-      ctx.font = `300 ${subSize}px 'Segoe UI', 'Helvetica Neue', sans-serif`;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-      ctx.fillText("D E P T .  O F  E E E", imgRight - (25 * scale), imgBottom - (48 * scale));
-
-      // Small decorative diamond ◆
-      ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-      ctx.font = `${Math.max(6, 7 * scale)}px sans-serif`;
-      ctx.fillText("◆", imgRight - (25 * scale), imgBottom - (30 * scale));
+      // Smooth gradient fade above the bar so it blends into the image
+      const fadeH = barH * 1.2;
+      const fadeGrad = ctx.createLinearGradient(0, ch - barH - fadeH, 0, ch - barH);
+      fadeGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
+      fadeGrad.addColorStop(1, "rgba(0, 0, 0, 1)");
+      ctx.fillStyle = fadeGrad;
+      ctx.fillRect(0, ch - barH - fadeH, cw, fadeH);
     }
 
     return true;
