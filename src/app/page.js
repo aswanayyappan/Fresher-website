@@ -123,9 +123,10 @@ export default function Home() {
       const imgRight = dx + iw * scale;
       const imgBottom = dy + ih * scale;
       
-      // Cover a small area in the bottom-right corner (relative to image scale)
-      const coverW = 160 * scale;
-      const coverH = 60 * scale;
+      // Cover a larger area in the bottom-right corner to reach the watermark
+      // Watermark is approx 90-150px from the bottom edge
+      const coverW = 180 * scale;
+      const coverH = 160 * scale;
       
       // Draw background-colored box over the watermark
       ctx.fillStyle = "#050505";
@@ -135,7 +136,12 @@ export default function Home() {
       ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
       ctx.font = `bold ${Math.max(12, 14 * scale)}px monospace`;
       ctx.textAlign = "right";
-      ctx.fillText("EEE DEPT.", imgRight - (15 * scale), imgBottom - (20 * scale));
+      
+      // Position the text nicely within this new taller box
+      ctx.fillText("EEE DEPT.", imgRight - (25 * scale), imgBottom - (80 * scale));
+      
+      ctx.font = `${Math.max(10, 11 * scale)}px monospace`;
+      ctx.fillText("FRESHERS '26", imgRight - (25 * scale), imgBottom - (60 * scale));
     }
 
     return true;
