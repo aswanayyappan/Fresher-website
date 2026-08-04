@@ -122,26 +122,60 @@ export default function Home() {
     if (imagePath.includes("/man/")) {
       const imgRight = dx + iw * scale;
       const imgBottom = dy + ih * scale;
-      
-      // Cover a larger area in the bottom-right corner to reach the watermark
-      // Watermark is approx 90-150px from the bottom edge
-      const coverW = 180 * scale;
-      const coverH = 160 * scale;
-      
-      // Draw background-colored box over the watermark
-      ctx.fillStyle = "#050505";
-      ctx.fillRect(imgRight - coverW, imgBottom - coverH, coverW, coverH);
 
-      // Add a cool, sleek text overlay so it looks intentional
-      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
-      ctx.font = `bold ${Math.max(12, 14 * scale)}px monospace`;
+      // --- Cinematic gradient fade from bottom-right corner ---
+      const fadeW = 220 * scale;
+      const fadeH = 200 * scale;
+      const fadeX = imgRight - fadeW;
+      const fadeY = imgBottom - fadeH;
+
+      // Smooth radial gradient that fades naturally into the image
+      const grad = ctx.createRadialGradient(
+        imgRight, imgBottom, 10 * scale,
+        imgRight, imgBottom, fadeW * 0.95
+      );
+      grad.addColorStop(0, "rgba(5, 5, 5, 0.95)");
+      grad.addColorStop(0.4, "rgba(5, 5, 5, 0.85)");
+      grad.addColorStop(0.7, "rgba(5, 5, 5, 0.4)");
+      grad.addColorStop(1, "rgba(5, 5, 5, 0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(fadeX, fadeY, fadeW, fadeH);
+
+      // --- Subtle glowing accent line ---
+      const lineY = imgBottom - (95 * scale);
+      const lineGrad = ctx.createLinearGradient(
+        imgRight - (140 * scale), lineY,
+        imgRight - (20 * scale), lineY
+      );
+      lineGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+      lineGrad.addColorStop(0.3, "rgba(255, 255, 255, 0.15)");
+      lineGrad.addColorStop(1, "rgba(255, 255, 255, 0.3)");
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(imgRight - (140 * scale), lineY);
+      ctx.lineTo(imgRight - (20 * scale), lineY);
+      ctx.stroke();
+
+      // --- Premium text with glow ---
       ctx.textAlign = "right";
-      
-      // Position the text nicely within this new taller box
-      ctx.fillText("EEE DEPT.", imgRight - (25 * scale), imgBottom - (80 * scale));
-      
-      ctx.font = `${Math.max(10, 11 * scale)}px monospace`;
-      ctx.fillText("FRESHERS '26", imgRight - (25 * scale), imgBottom - (60 * scale));
+      ctx.shadowColor = "rgba(255, 255, 255, 0.15)";
+      ctx.shadowBlur = 6 * scale;
+
+      // Main title
+      const titleSize = Math.max(13, 15 * scale);
+      ctx.font = `600 ${titleSize}px 'Segoe UI', 'Helvetica Neue', sans-serif`;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
+      ctx.fillText("EEE DEPT.", imgRight - (25 * scale), imgBottom - (65 * scale));
+
+      // Subtitle with letter-spacing effect
+      ctx.shadowBlur = 0;
+      ctx.shadowColor = "transparent";
+      const subSize = Math.max(9, 10 * scale);
+      ctx.font = `300 ${subSize}px 'Segoe UI', 'Helvetica Neue', sans-serif`;
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      const subtitle = "F R E S H E R S  ' 2 6";
+      ctx.fillText(subtitle, imgRight - (25 * scale), imgBottom - (45 * scale));
     }
 
     return true;
