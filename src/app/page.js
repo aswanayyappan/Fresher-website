@@ -120,18 +120,46 @@ export default function Home() {
 
     // Hide Gemini watermark for images in the 'man' folder
     if (imagePath.includes("/man/")) {
-      // Full-width solid black bar across the entire bottom — bulletproof coverage
-      const barH = Math.max(80, ch * 0.12);  // 12% of canvas height
+      // Full-width solid black bar across the entire bottom
+      const barH = Math.max(80, ch * 0.12);
       ctx.fillStyle = "#000000";
       ctx.fillRect(0, ch - barH, cw, barH);
 
-      // Smooth gradient fade above the bar so it blends into the image
-      const fadeH = barH * 1.2;
+      // Smooth gradient fade above the bar
+      const fadeH = barH * 1.5;
       const fadeGrad = ctx.createLinearGradient(0, ch - barH - fadeH, 0, ch - barH);
       fadeGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
+      fadeGrad.addColorStop(0.6, "rgba(0, 0, 0, 0.3)");
       fadeGrad.addColorStop(1, "rgba(0, 0, 0, 1)");
       ctx.fillStyle = fadeGrad;
       ctx.fillRect(0, ch - barH - fadeH, cw, fadeH);
+
+      // Subtle thin accent line at the fade transition
+      const lineY = ch - barH - (fadeH * 0.1);
+      const lineGrad = ctx.createLinearGradient(0, lineY, cw, lineY);
+      lineGrad.addColorStop(0, "rgba(255, 255, 255, 0)");
+      lineGrad.addColorStop(0.3, "rgba(255, 255, 255, 0.06)");
+      lineGrad.addColorStop(0.7, "rgba(255, 255, 255, 0.06)");
+      lineGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(0, lineY);
+      ctx.lineTo(cw, lineY);
+      ctx.stroke();
+
+      // Film grain / dust particles in the dark area for cinematic texture
+      ctx.globalAlpha = 0.08;
+      for (let i = 0; i < 40; i++) {
+        const px = Math.random() * cw;
+        const py = ch - barH + Math.random() * barH * 0.8;
+        const size = Math.random() * 1.5 + 0.3;
+        ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(px, py, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1.0;
     }
 
     return true;
