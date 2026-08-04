@@ -471,40 +471,62 @@ export default function Home() {
         {showMusicPopup && (
           <motion.div
             key="music-popup"
-            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[95] flex items-center gap-4 px-5 py-3.5 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50"
+            initial={{ opacity: 0, y: -60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -40 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed top-16 md:top-20 left-1/2 -translate-x-1/2 z-[95] w-[92vw] max-w-sm"
           >
-            {/* Headphone icon */}
-            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(96,165,250,1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 18v-6a9 9 0 0118 0v6" />
-                <path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z" />
-              </svg>
+            {/* Outer glow */}
+            <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-blue-500/30 via-cyan-400/20 to-blue-500/30 blur-sm" />
+
+            {/* Card */}
+            <div className="relative rounded-2xl bg-black/90 backdrop-blur-2xl border border-white/[0.08] overflow-hidden">
+              {/* Top gradient accent */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/50 to-transparent" />
+
+              <div className="flex items-center gap-3 p-4">
+                {/* Animated music icon with pulse ring */}
+                <div className="relative flex-shrink-0">
+                  <div className="absolute inset-0 rounded-full bg-blue-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+                  <div className="relative w-11 h-11 rounded-full bg-gradient-to-br from-blue-500/30 to-cyan-500/20 border border-blue-400/20 flex items-center justify-center">
+                    {/* Animated equalizer bars */}
+                    <div className="flex items-end gap-[2px] h-4">
+                      <div className="w-[3px] bg-blue-400 rounded-full animate-bounce" style={{ height: '8px', animationDelay: '0s', animationDuration: '0.6s' }} />
+                      <div className="w-[3px] bg-cyan-400 rounded-full animate-bounce" style={{ height: '14px', animationDelay: '0.15s', animationDuration: '0.5s' }} />
+                      <div className="w-[3px] bg-blue-400 rounded-full animate-bounce" style={{ height: '10px', animationDelay: '0.3s', animationDuration: '0.7s' }} />
+                      <div className="w-[3px] bg-cyan-400 rounded-full animate-bounce" style={{ height: '6px', animationDelay: '0.1s', animationDuration: '0.55s' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-semibold tracking-wide">Enable Music</div>
+                  <div className="text-white/40 text-[11px] mt-0.5">For the best cinematic experience</div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <button
+                    onClick={enableMusic}
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white text-xs font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-blue-500/25"
+                  >
+                    Play
+                  </button>
+                  <button
+                    onClick={dismissPopup}
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/5 transition-all duration-200 cursor-pointer"
+                    aria-label="Dismiss"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
             </div>
-
-            {/* Text + Button */}
-            <div className="flex flex-col gap-1">
-              <span className="text-white/90 text-xs font-medium tracking-wide">🎵 Enable Music?</span>
-              <span className="text-white/40 text-[10px]">Best experience with sound</span>
-            </div>
-
-            <button
-              onClick={enableMusic}
-              className="ml-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold tracking-wide transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
-            >
-              Turn On
-            </button>
-
-            {/* Dismiss */}
-            <button
-              onClick={dismissPopup}
-              className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/10 transition-all cursor-pointer"
-            >
-              ✕
-            </button>
           </motion.div>
         )}
       </AnimatePresence>
