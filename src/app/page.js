@@ -364,40 +364,40 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- PLAY MUSIC on first user interaction (touch/click/scroll) ---
-  const hasAutoPlayed = useRef(false);
+  // --- MUSIC POPUP: show on first scroll, ask user to enable music ---
+  const [showMusicPopup, setShowMusicPopup] = useState(false);
+  const popupShown = useRef(false);
+
   useEffect(() => {
-    const playMusic = () => {
-      if (hasAutoPlayed.current) return;
-      hasAutoPlayed.current = true;
-      const audio = audioRef.current;
-      if (!audio) return;
-      audio.volume = 0;
-      audio.play().then(() => {
-        let vol = 0;
-        const fadeIn = setInterval(() => {
-          vol = Math.min(vol + 0.02, 0.4);
-          audio.volume = vol;
-          if (vol >= 0.4) clearInterval(fadeIn);
-        }, 50);
-        setIsMuted(false);
-      }).catch(() => {
-        // Browser blocked it — reset so next interaction tries again
-        hasAutoPlayed.current = false;
-      });
+    const onScroll = () => {
+      if (!popupShown.current) {
+        popupShown.current = true;
+        setShowMusicPopup(true);
+        window.removeEventListener("scroll", onScroll);
+      }
     };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-    window.addEventListener("touchstart", playMusic, { passive: true });
-    window.addEventListener("click", playMusic);
-    window.addEventListener("scroll", playMusic, { passive: true });
-    window.addEventListener("keydown", playMusic);
+  const enableMusic = useCallback(() => {
+    setShowMusicPopup(false);
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = 0;
+    audio.play().then(() => {
+      let vol = 0;
+      const fadeIn = setInterval(() => {
+        vol = Math.min(vol + 0.02, 0.4);
+        audio.volume = vol;
+        if (vol >= 0.4) clearInterval(fadeIn);
+      }, 50);
+      setIsMuted(false);
+    }).catch(() => {});
+  }, []);
 
-    return () => {
-      window.removeEventListener("touchstart", playMusic);
-      window.removeEventListener("click", playMusic);
-      window.removeEventListener("scroll", playMusic);
-      window.removeEventListener("keydown", playMusic);
-    };
+  const dismissPopup = useCallback(() => {
+    setShowMusicPopup(false);
   }, []);
 
   // Manual audio toggle
@@ -465,6 +465,49 @@ export default function Home() {
           </svg>
         )}
       </button>
+
+      {/* ═══════════ MUSIC POPUP ═══════════ */}
+      <AnimatePresence>
+        {showMusicPopup && (
+          <motion.div
+            key="music-popup"
+            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[95] flex items-center gap-4 px-5 py-3.5 rounded-2xl bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50"
+          >
+            {/* Headphone icon */}
+            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(96,165,250,1)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 18v-6a9 9 0 0118 0v6" />
+                <path d="M21 19a2 2 0 01-2 2h-1a2 2 0 01-2-2v-3a2 2 0 012-2h3zM3 19a2 2 0 002 2h1a2 2 0 002-2v-3a2 2 0 00-2-2H3z" />
+              </svg>
+            </div>
+
+            {/* Text + Button */}
+            <div className="flex flex-col gap-1">
+              <span className="text-white/90 text-xs font-medium tracking-wide">🎵 Enable Music?</span>
+              <span className="text-white/40 text-[10px]">Best experience with sound</span>
+            </div>
+
+            <button
+              onClick={enableMusic}
+              className="ml-2 px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold tracking-wide transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              Turn On
+            </button>
+
+            {/* Dismiss */}
+            <button
+              onClick={dismissPopup}
+              className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/10 transition-all cursor-pointer"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══════════ LOADING SCREEN ═══════════ */}
       <AnimatePresence>
