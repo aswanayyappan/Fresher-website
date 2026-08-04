@@ -364,87 +364,41 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // --- AUDIO AUTOPLAY (two-phase: unlock on touch, play on scroll) ---
-  // Browsers block audio.play() unless triggered by a user gesture.
-  // Phase 1: Unlock audio on the very first touch/click anywhere on the page.
-  // Phase 2: Actually start playing when the scroll reaches the man folder images.
-  const audioUnlocked = useRef(false);
-  const wantAutoPlay = useRef(false);  // true if scroll passed the trigger but audio wasn't unlocked yet
+  // --- PLAY MUSIC on first user interaction (touch/click/scroll) ---
   const hasAutoPlayed = useRef(false);
-
-  // Phase 1: Unlock audio context on first user interaction
   useEffect(() => {
-    const unlockAudio = () => {
-      if (audioUnlocked.current) return;
+    const playMusic = () => {
+      if (hasAutoPlayed.current) return;
+      hasAutoPlayed.current = true;
       const audio = audioRef.current;
       if (!audio) return;
-
-      // Play silently then pause to unlock the audio element
       audio.volume = 0;
       audio.play().then(() => {
-        audio.pause();
-        audio.currentTime = 0;
-        audioUnlocked.current = true;
-
-        // If scroll already passed the trigger point, play now
-        if (wantAutoPlay.current && !hasAutoPlayed.current && isMuted) {
-          hasAutoPlayed.current = true;
-          audio.play().then(() => {
-            let vol = 0;
-            const fadeIn = setInterval(() => {
-              vol = Math.min(vol + 0.02, 0.4);
-              audio.volume = vol;
-              if (vol >= 0.4) clearInterval(fadeIn);
-            }, 50);
-            setIsMuted(false);
-          }).catch(() => {});
-        }
-      }).catch(() => {});
+        let vol = 0;
+        const fadeIn = setInterval(() => {
+          vol = Math.min(vol + 0.02, 0.4);
+          audio.volume = vol;
+          if (vol >= 0.4) clearInterval(fadeIn);
+        }, 50);
+        setIsMuted(false);
+      }).catch(() => {
+        // Browser blocked it — reset so next interaction tries again
+        hasAutoPlayed.current = false;
+      });
     };
 
-    // Listen for ANY user interaction to unlock audio
-    window.addEventListener("touchstart", unlockAudio, { once: false, passive: true });
-    window.addEventListener("click", unlockAudio, { once: false });
-    window.addEventListener("pointerdown", unlockAudio, { once: false, passive: true });
+    window.addEventListener("touchstart", playMusic, { passive: true });
+    window.addEventListener("click", playMusic);
+    window.addEventListener("scroll", playMusic, { passive: true });
+    window.addEventListener("keydown", playMusic);
 
     return () => {
-      window.removeEventListener("touchstart", unlockAudio);
-      window.removeEventListener("click", unlockAudio);
-      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("touchstart", playMusic);
+      window.removeEventListener("click", playMusic);
+      window.removeEventListener("scroll", playMusic);
+      window.removeEventListener("keydown", playMusic);
     };
-  }, [isMuted]);
-
-  // Phase 2: When scroll reaches man folder, either play or set wantAutoPlay flag
-  useEffect(() => {
-    if (frameCount === 0 || isLoading) return;
-
-    const unsubAutoPlay = scrollYProgress.on("change", (v) => {
-      if (v > 0.005 && !hasAutoPlayed.current && isMuted) {
-        if (audioUnlocked.current) {
-          // Audio is unlocked, play immediately
-          hasAutoPlayed.current = true;
-          const audio = audioRef.current;
-          if (audio) {
-            audio.volume = 0;
-            audio.play().then(() => {
-              let vol = 0;
-              const fadeIn = setInterval(() => {
-                vol = Math.min(vol + 0.02, 0.4);
-                audio.volume = vol;
-                if (vol >= 0.4) clearInterval(fadeIn);
-              }, 50);
-              setIsMuted(false);
-            }).catch(() => {});
-          }
-        } else {
-          // Audio not unlocked yet — remember that we want to play
-          wantAutoPlay.current = true;
-        }
-      }
-    });
-
-    return () => unsubAutoPlay();
-  }, [frameCount, isLoading, scrollYProgress, isMuted]);
+  }, []);
 
   // Manual audio toggle
   const toggleAudio = useCallback(() => {
