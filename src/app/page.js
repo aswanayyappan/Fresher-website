@@ -475,7 +475,7 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -40 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed top-16 md:top-20 left-1/2 -translate-x-1/2 z-[95] w-[92vw] max-w-sm"
+            className="fixed top-16 md:top-20 left-4 right-4 mx-auto max-w-sm z-[95]"
           >
             {/* Outer glow */}
             <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-blue-500/30 via-cyan-400/20 to-blue-500/30 blur-sm" />
