@@ -101,7 +101,7 @@ export default function Home() {
   }, []);
 
   // --- DRAW FUNCTION ---
-  const drawToCanvas = useCallback((ctx, canvas, imageToDraw) => {
+  const drawToCanvas = useCallback((ctx, canvas, imageToDraw, imagePath = "") => {
     const cw = canvas.width;
     const ch = canvas.height;
     const iw = imageToDraw.naturalWidth;
@@ -117,6 +117,27 @@ export default function Home() {
     ctx.fillStyle = "#050505";
     ctx.fillRect(0, 0, cw, ch);
     ctx.drawImage(imageToDraw, 0, 0, iw, ih, dx, dy, iw * scale, ih * scale);
+
+    // Hide Gemini watermark for images in the 'man' folder
+    if (imagePath.includes("/man/")) {
+      const imgRight = dx + iw * scale;
+      const imgBottom = dy + ih * scale;
+      
+      // Cover a small area in the bottom-right corner (relative to image scale)
+      const coverW = 160 * scale;
+      const coverH = 60 * scale;
+      
+      // Draw background-colored box over the watermark
+      ctx.fillStyle = "#050505";
+      ctx.fillRect(imgRight - coverW, imgBottom - coverH, coverW, coverH);
+
+      // Add a cool, sleek text overlay so it looks intentional
+      ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.font = `bold ${Math.max(12, 14 * scale)}px monospace`;
+      ctx.textAlign = "right";
+      ctx.fillText("EEE DEPT.", imgRight - (15 * scale), imgBottom - (20 * scale));
+    }
+
     return true;
   }, []);
 
@@ -162,7 +183,7 @@ export default function Home() {
       const img = imageCache.current.get(index);
 
       if (img && img.complete && img.naturalWidth > 0) {
-        drawToCanvas(ctx, canvas, img);
+        drawToCanvas(ctx, canvas, img, paths[index]);
         lastRenderedFrame.current = index;
       } else {
         // Frame not ready — find nearest loaded neighbor (search ±5 instead of 10 for performance)
@@ -172,7 +193,7 @@ export default function Home() {
             if (n < 0 || n >= frameCount) continue;
             const nImg = imageCache.current.get(n);
             if (nImg && nImg.complete && nImg.naturalWidth > 0) {
-              drawToCanvas(ctx, canvas, nImg);
+              drawToCanvas(ctx, canvas, nImg, paths[n]);
               drawn = true;
               break;
             }
@@ -186,7 +207,7 @@ export default function Home() {
           const onReady = () => {
             const p = scrollYProgress.get();
             const curr = Math.min(frameCount - 1, Math.max(0, Math.floor(p * (frameCount - 1))));
-            if (curr === index && drawToCanvas(ctx, canvas, img)) {
+            if (curr === index && drawToCanvas(ctx, canvas, img, paths[index])) {
               lastRenderedFrame.current = index;
             }
           };
@@ -203,7 +224,7 @@ export default function Home() {
           newImg.onload = () => {
             const p = scrollYProgress.get();
             const curr = Math.min(frameCount - 1, Math.max(0, Math.floor(p * (frameCount - 1))));
-            if (curr === index && drawToCanvas(ctx, canvas, newImg)) {
+            if (curr === index && drawToCanvas(ctx, canvas, newImg, paths[index])) {
               lastRenderedFrame.current = index;
             }
           };
